@@ -173,37 +173,56 @@ struct entry* parse(const char* ptr)
     }
 
     struct entry* json = NULL;
+    struct entry* prev_entry = NULL;
+    struct entry* curr_entry = NULL;
 
     index = 0;
     if ('{' != ptr[index])
         goto error;
 
-    ADVANCE_NEXT_WORD(ptr, index);
+    while ('}' != ptr[index])
+    {
+        ADVANCE_NEXT_WORD(ptr, index);
 
-    if ('\"' != ptr[index])
-        goto error;
+        if ('\"' != ptr[index])
+            goto error;
 
-    end_index = strchr(ptr + (++index), '\"') - ptr;
+        end_index = strchr(ptr + (++index), '\"') - ptr;
 
-    key = (char*) realloc(key, sizeof(char) * (end_index - index + 1));
-    if (NULL == key)
-        goto error;
-    memcpy(key, ptr + index, end_index - index + 1);
-    key[end_index - index] = '\0';
+        key = (char*) realloc(key, sizeof(char) * (end_index - index + 1));
+        if (NULL == key)
+            goto error;
+        memcpy(key, ptr + index, end_index - index + 1);
+        key[end_index - index] = '\0';
 
-    ADVANCE_NEXT_WORD(ptr, index);
+        ADVANCE_NEXT_WORD(ptr, index);
 
-    if (':' != ptr[index])
-        goto error;
+        if (':' != ptr[index])
+            goto error;
 
-    ++index;
-    ADVANCE_NEXT_WORD(ptr, index);
-    parse_data(ptr, &index, &data, &type);
+        ++index;
+        ADVANCE_NEXT_WORD(ptr, index);
+        parse_data(ptr, &index, &data, &type);
 
-    json = create_entry(key, type, data);
+        curr_entry = create_entry(key, type, data);
 
-    FREE_PTR(key);
-    FREE_PTR(data);
+        if (NULL == json)
+            json = curr_entry;
+        if (NULL != prev_entry)
+            prev_entry->next = curr_entry;
+
+        FREE_PTR(key);
+        FREE_PTR(data);
+
+        ADVANCE_NEXT_WORD(ptr, index);
+        if (',' == ptr[index])
+        {
+            prev_entry = curr_entry;
+        }
+
+        if (',' != ptr[index] && '}' != ptr[index])
+            goto error;
+    }
 
     return json;
 
@@ -217,5 +236,8 @@ error:
     FREE_PTR(data);
     PRINTERR("Parsing (index: %u, value: %c\n\trest: %s\n",
              index, ptr[index], index + ptr);
+    if (NULL != json)
+        delete_entry(&json);
+
     return NULL;
 }

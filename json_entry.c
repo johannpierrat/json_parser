@@ -85,35 +85,42 @@ void delete_entry(struct entry** entry) {
     struct array_list* tmp_del_ptr;
 
     struct entry* tmp = *(entry);
+    struct entry* tmp2;
 
     if (NULL == entry)
     {
         return;
     }
 
-    FREE_PTR(tmp->key);
-    switch (tmp->type)
+    while (tmp != NULL)
     {
-        case STRING:
-        case INTEGER:
-        case OBJECT:
-        case BOOLEAN:
-            FREE_PTR(tmp->data);
-            break;
-        case ARRAY:
-            tmp_ptr = (struct array_list*) tmp->data;
-            while (tmp_ptr != NULL)
-            {
-                tmp_del_ptr = tmp_ptr;
-                tmp_ptr = tmp_ptr->next;
-                free(tmp_del_ptr);
-            }
-            break;
-        case ERROR:
-        case NULL_DATA:
-            break;
+        FREE_PTR(tmp->key);
+        switch (tmp->type)
+        {
+            case STRING:
+            case INTEGER:
+            case OBJECT:
+            case BOOLEAN:
+                FREE_PTR(tmp->data);
+                break;
+            case ARRAY:
+                tmp_ptr = (struct array_list*) tmp->data;
+                while (tmp_ptr != NULL)
+                {
+                    tmp_del_ptr = tmp_ptr;
+                    tmp_ptr = tmp_ptr->next;
+                    free(tmp_del_ptr);
+                }
+                break;
+            case ERROR:
+            case NULL_DATA:
+                break;
+        }
+        tmp2 = tmp;
+        tmp = tmp->next;
+
+        free(tmp2);
     }
 
-    free(tmp);
-    tmp = NULL;
+    *entry = NULL;
 }

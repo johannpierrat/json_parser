@@ -34,6 +34,7 @@ struct entry {
     char* key;
     json_type_e type;
     void* data;
+    struct entry* next;
 };
 
 struct array_list {

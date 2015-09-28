@@ -83,42 +83,53 @@ static void array_to_string(char** string,
 void json_to_string(char** string,
                     size_t* size,
                     int* index,
-                    struct entry entry)
+                    struct entry* entry)
 {
     char* tmp_str = NULL;
 
     INSERT_STRING(*string, *size, *index, "{\"");
-    INSERT_STRING(*string, *size, *index, entry.key);
-    INSERT_STRING(*string, *size, *index, "\":");
+    while (NULL != entry)
+    {
+        INSERT_STRING(*string, *size, *index, entry->key);
+        INSERT_STRING(*string, *size, *index, "\":");
 
-    switch (entry.type){
-        case STRING:
-            INSERT_STRING(*string, *size, *index, (char*)entry.data);
-            break;
-        case BOOLEAN:
-            INSERT_STRING(*string, *size, *index,
-                          (*(int*)(entry.data)) ? "\"true\"" : "\"false\"");
-            break;
-        case INTEGER:
-            tmp_str = (char*) malloc(10 * sizeof(char));
-            memset(tmp_str, 0, 10 * sizeof(char));
-            itos(tmp_str, *(int*)(entry.data));
-            free(tmp_str);
-            break;
-        case OBJECT:
-            json_to_string(string, size, index, *(struct entry*)(entry.data));
-            break;
-        case NULL_DATA:
-            INSERT_STRING(*string, *size, *index, "null");
-            break;
-        case ARRAY:
-            array_to_string(string, size, index,
-                            (struct array_list*) entry.data);
-            break;
-        case ERROR:
-        default:
-            return;
+        switch (entry->type){
+            case STRING:
+                INSERT_STRING(*string, *size, *index, (char*)entry->data);
+                break;
+            case BOOLEAN:
+                INSERT_STRING(*string, *size, *index,
+                              (*(int*)(entry->data)) ?
+                              "\"true\"" : "\"false\"");
+                break;
+            case INTEGER:
+                tmp_str = (char*) malloc(10 * sizeof(char));
+                memset(tmp_str, 0, 10 * sizeof(char));
+                itos(tmp_str, *(int*)(entry->data));
+                free(tmp_str);
+                break;
+            case OBJECT:
+                json_to_string(string, size, index,
+                               *(struct entry*)(entry->data));
+                break;
+            case NULL_DATA:
+                INSERT_STRING(*string, *size, *index, "null");
+                break;
+            case ARRAY:
+                array_to_string(string, size, index,
+                                (struct array_list*) entry->data);
+                break;
+            case ERROR:
+            default:
+                return;
+        }
+        if (NULL != entry->next)
+        {
+            INSERT_STRING(*string, *size, *index, ",");
+        }
+        entry = entry->next;
     }
 
     INSERT_STRING(*string, *size, *index, "}");
+    *string[*index] = '\0';
 }

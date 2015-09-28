@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "json_entry.h"
 
 inline int get_array_size(struct array_list* array) {
@@ -40,9 +41,6 @@ struct entry* create_entry(const char* key,
         case STRING:
             memcpy(entry->data, data, strlen((char*) data) * sizeof(char));
             break;
-        case DATE:
-            memcpy(entry->data, data,  sizeof(struct tm));
-            break;
         case INTEGER:
             memcpy(entry->data, data,  sizeof(int));
             break;
@@ -82,26 +80,28 @@ error:
     return NULL;
 }
 
-void delete_entry(struct entry* entry) {
+void delete_entry(struct entry** entry) {
+    struct array_list* tmp_ptr;
+    struct array_list* tmp_del_ptr;
+
+    struct entry* tmp = *(entry);
+
     if (NULL == entry)
     {
         return;
     }
 
-    struct array_list* tmp_ptr = (struct array_list*) entry->data;
-    struct array_list* tmp_del_ptr;
-
-    FREE_PTR(entry->key);
-    switch (entry->type)
+    FREE_PTR(tmp->key);
+    switch (tmp->type)
     {
         case STRING:
-        case DATE:
         case INTEGER:
         case OBJECT:
         case BOOLEAN:
-            FREE_PTR(entry->data);
+            FREE_PTR(tmp->data);
             break;
         case ARRAY:
+            tmp_ptr = (struct array_list*) tmp->data;
             while (tmp_ptr != NULL)
             {
                 tmp_del_ptr = tmp_ptr;
@@ -109,10 +109,11 @@ void delete_entry(struct entry* entry) {
                 free(tmp_del_ptr);
             }
             break;
+        case ERROR:
         case NULL_DATA:
             break;
     }
 
-    free(entry);
-    entry = NULL;
+    free(tmp);
+    tmp = NULL;
 }

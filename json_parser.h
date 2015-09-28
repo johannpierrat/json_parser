@@ -1,11 +1,26 @@
 #ifndef JSON_PARSER_H
 # define JSON_PARSER_H 1
 
-#include "json_entry.h"
+# include <stdio.h>
+# include "json_entry.h"
+
+# define ADVANCE_NEXT_WORD(STR, INDEX)      \
+    for(;                                   \
+        ' ' == STR[INDEX] ||                \
+        '\n' == STR[INDEX] ||               \
+        '\t' == STR[INDEX]; ++INDEX);       \
+
+# define PRINTERR(STR, ...)           \
+    fprintf(stderr, STR, __VA_ARGS__)
+
+# define MIN(A, B) ((A < B) ? A : B)
+# define MAX(A, B) ((A > B) ? A : B)
+
+
 
 /**
- * Parse json entry
+ * Parse start of the json parsing
 */
-struct entry* start_parse(char* ptr);
+struct entry* parse(const char* ptr);
 
 #endif

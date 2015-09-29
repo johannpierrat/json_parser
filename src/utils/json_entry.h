@@ -60,4 +60,12 @@ struct entry* create_entry(const char* key,
 */
 void delete_entry(struct entry** entry);
 
+/**
+ * return a value corresponding to the key
+ * \param json json entry
+ * \param key key to look for
+ * \return value or NULL if not found
+*/
+void* get_json_item(struct entry* json, const char* key);
+
 #endif

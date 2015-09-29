@@ -124,3 +124,15 @@ void delete_entry(struct entry** entry) {
 
     *entry = NULL;
 }
+
+void* get_json_item(struct entry* entry, const char* key)
+{
+    while (entry != NULL)
+    {
+        if (0 == strcmp(entry->key, key))
+            return entry->data;
+        entry = entry->next;
+    }
+
+    return NULL;
+}

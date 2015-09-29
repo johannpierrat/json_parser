@@ -21,6 +21,6 @@
 /**
  * Parse start of the json parsing
 */
-struct entry* parse(const char* ptr);
+struct entry* json_parse(const char* ptr);
 
 #endif

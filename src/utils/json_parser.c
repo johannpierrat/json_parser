@@ -105,7 +105,7 @@ static void parse_data(const char* ptr,
 
         return;
     }
-    else if (strncmp("null", ptr, 4) == 0)
+    else if (strncmp("null", ptr + *index, 4) == 0)
     {
         *data = NULL;
         *type = NULL_DATA;
@@ -113,7 +113,7 @@ static void parse_data(const char* ptr,
         ADVANCE_NEXT_WORD(ptr, *index);
         return;
     }
-    else if (strncmp("true", ptr, 4) == 0)
+    else if (strncmp("true", ptr + *index, 4) == 0)
     {
         *data = realloc(*data, sizeof (int));
         if (NULL == *data)
@@ -125,7 +125,7 @@ static void parse_data(const char* ptr,
         ADVANCE_NEXT_WORD(ptr, *index);
         return;
     }
-    else if (strncmp("false", ptr, 5) == 0)
+    else if (strncmp("false", ptr + *index, 5) == 0)
     {
         *data = realloc(*data, sizeof (int));
         *(int*)(*data) = 0;
@@ -160,7 +160,7 @@ static void parse_data(const char* ptr,
     }
 }
 
-struct entry* parse(const char* ptr)
+struct entry* json_parse(const char* ptr)
 {
     unsigned int index;
     int end_index;

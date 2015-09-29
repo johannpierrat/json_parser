@@ -3,7 +3,17 @@
 #include <time.h>
 #include "json_entry.h"
 
-inline int get_array_size(struct array_list* array) {
+const char* json_type_string[] = {
+    "ERROR",
+    "STRING",
+    "INTEGER",
+    "ARRAY",
+    "OBJECT",
+    "NULL_DATA",
+    "BOOLEAN"
+};
+
+int get_array_size(struct array_list* array) {
     int size = 0;
     struct array_list* tmp = array;
 
@@ -30,6 +40,8 @@ struct entry* create_entry(const char* key,
     if (NULL == key) {
         goto error;
     }
+
+    entry->key = (char*) malloc(strlen(key) * sizeof(char));
     memcpy(entry->key, key, strlen(key) * sizeof(char));
 
     if (NULL == data && type != NULL_DATA)
@@ -39,21 +51,26 @@ struct entry* create_entry(const char* key,
 
     switch (type) {
         case STRING:
+            entry->data = malloc(strlen((char*) data) * sizeof(char));
             memcpy(entry->data, data, strlen((char*) data) * sizeof(char));
             break;
         case INTEGER:
+            entry->data = malloc(sizeof(int));
             memcpy(entry->data, data,  sizeof(int));
             break;
         case BOOLEAN:
+            entry->data = malloc(sizeof(char));
             memcpy(entry->data, data,  sizeof(char));
             break;
         case OBJECT:
+            entry->data = malloc(sizeof(struct entry));
             memcpy(entry->data, data,  sizeof(struct entry));
             break;
         case NULL_DATA:
             entry->data = NULL;
         case ARRAY:
-            memcpy(entry->data, data, sizeof(array_list));
+            entry->data = malloc(sizeof(struct array_list));
+            memcpy(entry->data, data, sizeof(struct array_list));
         default:
             goto error;
     }

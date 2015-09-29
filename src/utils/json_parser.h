@@ -13,10 +13,6 @@
 # define PRINTERR(STR, ...)           \
     fprintf(stderr, STR, __VA_ARGS__)
 
-# define MIN(A, B) ((A < B) ? A : B)
-# define MAX(A, B) ((A > B) ? A : B)
-
-
 
 /**
  * Parse start of the json parsing

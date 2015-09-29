@@ -11,6 +11,6 @@
 void json_to_string(char** string,
                     size_t* size,
                     int* index,
-                    struct entry entry);
+                    struct entry* entry);
 
 #endif

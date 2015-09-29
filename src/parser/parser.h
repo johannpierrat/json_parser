@@ -4,6 +4,6 @@
 /**
  * Open and parse a file
 */
-void parser(char* filename);
+void parser(const char* filename);
 
 #endif

@@ -59,7 +59,7 @@ static void array_to_string(char** string,
                 break;
             case OBJECT:
                 json_to_string(string, size, index,
-                               *(struct entry*)(tmp->data));
+                               (struct entry*)(tmp->data));
                 break;
             case NULL_DATA:
                 INSERT_STRING(*string, *size, *index, "null");
@@ -110,7 +110,7 @@ void json_to_string(char** string,
                 break;
             case OBJECT:
                 json_to_string(string, size, index,
-                               *(struct entry*)(entry->data));
+                               (struct entry*)(entry->data));
                 break;
             case NULL_DATA:
                 INSERT_STRING(*string, *size, *index, "null");

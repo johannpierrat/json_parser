@@ -1,5 +1,7 @@
 #ifndef JSON_ENTRY_H
-#define JSON_ENTRY_H value
+# define JSON_ENTRY_H 1
+
+# include <stdio.h>
 
 # define FREE_PTR(PTR)          \
     {                           \
@@ -20,16 +22,6 @@ typedef enum {
     BOOLEAN
 } json_type_e;
 
-const char* json_type_string[] = {
-    "ERROR",
-    "STRING",
-    "INTEGER",
-    "ARRAY",
-    "OBJECT",
-    "NULL_DATA",
-    "BOOLEAN"
-};
-
 struct entry {
     char* key;
     json_type_e type;
@@ -43,7 +35,7 @@ struct array_list {
     struct array_list* next;
 };
 
-inline int get_array_size(struct array_list* array);
+int get_array_size(struct array_list* array);
 
 /**
  * Create a json entry

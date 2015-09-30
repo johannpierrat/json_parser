@@ -6,12 +6,17 @@
 
 # define ADVANCE_NEXT_WORD(STR, INDEX)      \
     for(;                                   \
-        ' ' == STR[INDEX] ||                \
-        '\n' == STR[INDEX] ||               \
-        '\t' == STR[INDEX]; ++INDEX);       \
+        ' ' == (STR)[(INDEX)] ||            \
+        '\n' == (STR)[(INDEX)] ||           \
+        '\t' == (STR)[(INDEX)]; ++(INDEX)); \
 
-# define PRINTERR(STR, ...)           \
-    fprintf(stderr, STR, __VA_ARGS__)
+# define PRINTERR(STR, ...)                 \
+    fprintf(stderr, (STR), __VA_ARGS__)
+
+# define IS_HEXA(CHAR)                      \
+    (((CHAR) >= '0' && (CHAR) <= '9') ||    \
+     ((CHAR) >= 'a' && (CHAR) <= 'f') ||    \
+     ((CHAR) >= 'A' && (CHAR) <= 'F'))
 
 
 /**

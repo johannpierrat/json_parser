@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "json_parser.h"
+#include "json_print.h"
 
 # define PARSE_RETURN_ERROR(TYPE)               \
     {                                           \
-        TYPE = ERROR;                           \
+        (TYPE) = ERROR;                         \
         return;                                 \
     }
 
@@ -20,56 +21,69 @@ static void parse_data(const char* ptr,
     void* data_tmp = NULL;
     json_type_e type_tmp;
     unsigned int end_index;
+    struct entry* curr_entry;
+    struct entry* prev_entry;
 
     if ('{' == ptr[*index]) {
         ++(*index);
-        ADVANCE_NEXT_WORD(ptr, *index);
+        *type = OBJECT;
 
-        // Get Key
-        if ('\"' != ptr[*index])
-            PARSE_RETURN_ERROR(*type);
-
-        end_index = strchr(ptr + (++(*index)), '\"') - ptr;
-
-        key = (char*) realloc(key, sizeof(char) * (end_index - *index + 1));
-        if (NULL == key)
-            PARSE_RETURN_ERROR(*type);
-
-        memcpy(key, ptr + *index, end_index - *index + 1);
-        key[end_index - *index] = '\0';
-
-        *index = end_index + 1;
-        ADVANCE_NEXT_WORD(ptr, *index);
-
-        if (':' != ptr[*index])
+        while ('}' != ptr[*index])
         {
-            FREE_PTR(key);
-            PARSE_RETURN_ERROR(*type);
-        }
+            ADVANCE_NEXT_WORD(ptr, *index);
 
-        // Get Data
-        ++(*index);
-        ADVANCE_NEXT_WORD(ptr, *index);
-        parse_data(ptr, index, &data_tmp, &type_tmp);
+            if ('\"' != ptr[*index])
+                PARSE_RETURN_ERROR(*type);
 
-        if (ERROR == type_tmp)
-        {
-            FREE_PTR(key);
-            FREE_PTR(data_tmp)
-            PARSE_RETURN_ERROR(*type);
-        }
+            ++(*index);
+            end_index = strchr(ptr + *index, '\"') - ptr;
 
-        *data = create_entry(key, type_tmp, data_tmp);
+            key = (char*) realloc(key,
+                                  sizeof(char) * (end_index - *index + 1));
 
-        if (NULL == *data)
-        {
+            if (NULL == key)
+            {
+                PARSE_RETURN_ERROR(*type);
+            }
+            memcpy(key, ptr + *index, end_index - *index + 1);
+            key[end_index - *index] = '\0';
+            *index = end_index + 1;
+
+            if (':' != ptr[*index])
+            {
+                FREE_PTR(key);
+                PARSE_RETURN_ERROR(*type)
+            }
+
+            ++(*index);
+            ADVANCE_NEXT_WORD(ptr, *index);
+
+            parse_data(ptr, index, &data_tmp, &type_tmp);
+
+            if (ERROR != type_tmp)
+            {
+                curr_entry = create_entry(key, type_tmp, data_tmp);
+
+                if (NULL == *data)
+                    *data = curr_entry;
+                if (NULL != prev_entry)
+                    prev_entry->next = curr_entry;
+            }
+
             FREE_PTR(key);
             FREE_PTR(data_tmp);
-            PARSE_RETURN_ERROR(*type);
-        }
 
-        FREE_PTR(key);
-        FREE_PTR(data_tmp);
+            ADVANCE_NEXT_WORD(ptr, *index);
+
+            if (',' != ptr[*index] && '}' != ptr[*index])
+                PARSE_RETURN_ERROR(*type);
+
+            if (',' == ptr[*index])
+            {
+                prev_entry = curr_entry;
+                (*index)++;
+            }
+        }
 
         return;
     }
@@ -111,11 +125,11 @@ static void parse_data(const char* ptr,
         *type = STRING;
         ++(*index);
         end_index = strchr(ptr + *index, '\"') - ptr;
-        *data = realloc(*data, (end_index - *index) * sizeof (char));
+        *data = realloc(*data, (end_index - *index + 1) * sizeof (char));
         if (NULL == *data)
             PARSE_RETURN_ERROR(*type);
 
-        strncpy((char*) *data, ptr + *index, end_index - *index - 1);
+        strncpy((char*) *data, ptr + *index, end_index - *index + 1);
         ((char*)(*data))[end_index] = '\0';
 
         *index = end_index + 1;
@@ -152,23 +166,47 @@ static void parse_data(const char* ptr,
         ADVANCE_NEXT_WORD(ptr, *index);
         return;
     }
+    else if (strncmp("0x", ptr + *index, 2) == 0)
+    {
+        *index += 2;
+        *type = HEXA;
+        *data = realloc(*data, sizeof(int));
+        for (end_index = *index;
+             IS_HEXA(ptr[end_index]);
+             ++end_index);
+
+        tmp = (char*) realloc(tmp, ((end_index - (*index) + 1) * sizeof(char)));
+        if (NULL == tmp)
+            PARSE_RETURN_ERROR(*type);
+
+        strncpy(tmp, ptr + (*index), end_index - *index + 1);
+        tmp[end_index + *index] = '\0';
+
+        *(int*)(*data) = itoh(tmp);
+        FREE_PTR(tmp);
+
+        *index = end_index;
+        ADVANCE_NEXT_WORD(ptr, *index);
+        return;
+    }
     else if (ptr[*index] >= '0' && ptr[*index] <= '9')
     {
+        // Integer value
         *type = INTEGER;
         *data = realloc(*data, sizeof(int));
         if (NULL == *data)
             PARSE_RETURN_ERROR(*type);
 
+        for (end_index = *index;
+             ptr[end_index] >= '0' && ptr[end_index] <= '9';
+             ++end_index);
 
-        end_index = MIN(strchr(ptr + *index, ' ') - ptr,
-                        strchr(ptr + *index, ',') - ptr);
-
-        tmp = (char*) realloc(tmp, (end_index - (*index)) * sizeof (char));
+        tmp = (char*) realloc(tmp, (end_index - (*index) + 1) * sizeof (char));
         if (NULL == tmp)
             PARSE_RETURN_ERROR(*type);
 
-        strncpy(tmp, ptr + (*index), end_index - *index - 1);
-        tmp[end_index + *index] = '\0';
+        strncpy(tmp, ptr + (*index), end_index - *index + 1);
+        tmp[end_index - *index] = '\0';
 
         *(int*)(*data) = atoi(tmp);
         FREE_PTR(tmp);
@@ -181,7 +219,7 @@ static void parse_data(const char* ptr,
 
 struct entry* json_parse(const char* ptr)
 {
-    unsigned int index;
+    unsigned int index = 0;
     int end_index;
     char* key = NULL;
     void* data = NULL;
@@ -195,11 +233,10 @@ struct entry* json_parse(const char* ptr)
     struct entry* prev_entry = NULL;
     struct entry* curr_entry = NULL;
 
-    index = 0;
     if ('{' != ptr[index])
         goto error;
 
-    index++;
+    ++index;
 
     while ('}' != ptr[index])
     {
@@ -208,7 +245,8 @@ struct entry* json_parse(const char* ptr)
         if ('\"' != ptr[index])
             goto error;
 
-        end_index = strchr(ptr + (++index), '\"') - ptr;
+        ++index;
+        end_index = strchr(ptr + index, '\"') - ptr;
 
         key = (char*) realloc(key, sizeof(char) * (end_index - index + 1));
         if (NULL == key)
@@ -226,25 +264,29 @@ struct entry* json_parse(const char* ptr)
         ADVANCE_NEXT_WORD(ptr, index);
         parse_data(ptr, &index, &data, &type);
 
-        curr_entry = create_entry(key, type, data);
+        if (ERROR != type)
+        {
+            curr_entry = create_entry(key, type, data);
 
-        if (NULL == json)
-            json = curr_entry;
-        if (NULL != prev_entry)
-            prev_entry->next = curr_entry;
+            if (NULL == json)
+                json = curr_entry;
+            if (NULL != prev_entry)
+                prev_entry->next = curr_entry;
+        }
 
         FREE_PTR(key);
         FREE_PTR(data);
 
         ADVANCE_NEXT_WORD(ptr, index);
-        if (',' == ptr[index])
-        {
-            prev_entry = curr_entry;
-        }
 
         if (',' != ptr[index] && '}' != ptr[index])
             goto error;
-        index++;
+
+        if (',' == ptr[index])
+        {
+            prev_entry = curr_entry;
+            index++;
+        }
     }
 
     return json;

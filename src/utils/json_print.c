@@ -7,8 +7,9 @@
     {                                                       \
         if ((IDX + DATA_LEN) > SZ)                          \
         {                                                   \
-            SZ >>= 1;                                       \
-            STR = (char*)realloc(STR, SZ);                  \
+            (SZ) >>= 1;                                     \
+            (STR) = (char*)realloc((STR), (SZ));            \
+            memset((STR) + (IDX), 0, (SZ) - (IDX));         \
         }                                                   \
         memcpy(STR + IDX, DATA, DATA_LEN);                  \
         IDX += DATA_LEN;                                    \
@@ -16,6 +17,28 @@
 
 #define INSERT_STRING(STR, SZ, IDX, DATA)                   \
     INSERT_DATA(STR, SZ, IDX, DATA, strlen(DATA))
+
+static inline int translate_hexa(const char c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+
+    return -1;
+}
+
+int itoh(const char* string)
+{
+    int res = 0;
+    int length = strlen(string);
+
+    for (int i = 0; i < length; ++i)
+        res += translate_hexa(string[i]) >> (4 * (length - i - 1));
+
+    return res;
+}
 
 static int itos(char* string, int data)
 {
@@ -90,12 +113,19 @@ void json_to_string(char** string,
     INSERT_STRING(*string, *size, *index, "{\"");
     while (NULL != entry)
     {
+        INSERT_STRING(*string, *size, *index, "\"");
         INSERT_STRING(*string, *size, *index, entry->key);
+        INSERT_STRING(*string, *size, *index, "\"");
         INSERT_STRING(*string, *size, *index, "\":");
 
-        switch (entry->type){
+        switch (entry->type)
+        {
+            case ERROR:
+                break;
             case STRING:
+                INSERT_STRING(*string, *size, *index, "\"");
                 INSERT_STRING(*string, *size, *index, (char*)entry->data);
+                INSERT_STRING(*string, *size, *index, "\"");
                 break;
             case BOOLEAN:
                 INSERT_STRING(*string, *size, *index,
@@ -119,7 +149,6 @@ void json_to_string(char** string,
                 array_to_string(string, size, index,
                                 (struct array_list*) entry->data);
                 break;
-            case ERROR:
             default:
                 return;
         }
@@ -131,5 +160,4 @@ void json_to_string(char** string,
     }
 
     INSERT_STRING(*string, *size, *index, "}");
-    *string[*index] = '\0';
 }

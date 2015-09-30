@@ -13,9 +13,10 @@
     }
 
 typedef enum {
-    ERROR,
-    STRING,
+    ERROR = -1,
+    STRING = 0,
     INTEGER,
+    HEXA,
     ARRAY,
     OBJECT,
     NULL_DATA,

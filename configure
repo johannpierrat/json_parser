@@ -1,0 +1,16 @@
+#!/bin/sh
+
+f="Makefile.rules"
+rm -f $f
+echo "PROJECT=json_parser" >> $f
+echo "NAME=json_parser" >> $f
+echo "CC=gcc" >> $f
+if [ $# -gt 0 ] && [ $1 = "debug" ] ; then
+  echo "CFLAGS=-Werror -Wall -Wextra -std=c99 -pedantic -g -ggdb3" >> $f
+else
+   echo "CFLAGS=-Werror -Wall -Wextra -std=c99 -pedantic" >> $f
+fi
+echo "SOURCE=src/" >> $f
+echo "FILES=utils/json_entry.c utils/json_list.c utils/json_parser.c \
+    utils/json_print.c parser/parser.c" >> $f
+echo 'OBJ= $(FILES:.c=.o)' >> $f

@@ -5,6 +5,11 @@
 # include "json_entry.h"
 
 /**
+ * Transform string to hexa value
+*/
+int itoh(const char* string);
+
+/**
  * transform json object to string
  * \param entry
 */

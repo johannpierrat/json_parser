@@ -7,6 +7,7 @@ const char* json_type_string[] = {
     "ERROR",
     "STRING",
     "INTEGER",
+    "HEXA",
     "ARRAY",
     "OBJECT",
     "NULL_DATA",
@@ -55,6 +56,7 @@ struct entry* create_entry(const char* key,
             memcpy(entry->data, data, strlen((char*) data) * sizeof(char));
             break;
         case INTEGER:
+        case HEXA:
             entry->data = malloc(sizeof(int));
             memcpy(entry->data, data,  sizeof(int));
             break;
@@ -116,6 +118,7 @@ void delete_entry(struct entry** entry) {
         {
             case STRING:
             case INTEGER:
+            case HEXA:
             case OBJECT:
             case BOOLEAN:
                 FREE_PTR(tmp->data);

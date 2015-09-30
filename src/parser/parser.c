@@ -40,18 +40,25 @@ void parser(const char* filename)
         // One json per line
         if ('\n' == ptr[index - 1])
         {
-            char* output = NULL;
             int index2 = 0;
-            size_t size2 = 0;
+            size_t size2 = 255;
+            char* output = (char*) malloc(size2 * sizeof(char));
+
+            if (NULL == output)
+            {
+                PRINTERR("Unable to malloc %s\n", " ");
+            }
 
             entry = json_parse(ptr);
-            if (NULL == entry)
+            if (NULL == entry || entry->type == ERROR)
             {
                 PRINTERR("Error Parsing: %s\n", ptr);
             }
             else {
-                json_to_string(&output, &size2, &index2, entry);
                 add_json_to_list(&list, entry);
+                json_to_string(&output, &size2, &index2, entry);
+                printf("%s\n", output);
+                FREE_PTR(output);
             }
 
             // Reset data
@@ -63,7 +70,6 @@ void parser(const char* filename)
     }
 
     FREE_PTR(ptr);
-    delete_entry(&entry);
 
 error:
     FREE_PTR(ptr);
